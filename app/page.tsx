@@ -1,103 +1,212 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useCallback, MouseEvent } from "react";
+import data from "@/data/data.json";
+import Paginations from "@/components/Pagination";
+
+interface DataItem {
+  userId: number;
+  id: number;
+  title: string;
+  completed: boolean;
+}
+
+export default function Page() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [dataArray, setDataArray] = useState<DataItem[]>(Array.isArray(data) ? data : []);
+  const [draggedItem, setDraggedItem] = useState<DataItem | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const NUM_OF_RECORDS = dataArray.length;
+  const LIMIT = 5;
+
+  const onPageChanged = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>, page: number) => {
+      event.preventDefault();
+      setCurrentPage(page);
+    },
+    [setCurrentPage]
+  );
+
+  const currentData = dataArray.slice(
+    (currentPage - 1) * LIMIT,
+    (currentPage - 1) * LIMIT + LIMIT
+  );
+
+  const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, item: DataItem) => {
+    setDraggedItem(item);
+    e.dataTransfer!.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>) => {
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = "move";
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLTableRowElement>, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLTableRowElement>) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLTableRowElement>, targetItem: DataItem) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+
+    if (!draggedItem || draggedItem.id === targetItem.id) {
+      setDraggedItem(null);
+      return;
+    }
+
+    const draggedIndex = dataArray.findIndex((item) => item.id === draggedItem.id);
+    const targetIndex = dataArray.findIndex((item) => item.id === targetItem.id);
+
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      const newData = [...dataArray];
+      newData.splice(draggedIndex, 1);
+      newData.splice(targetIndex, 0, draggedItem);
+      setDataArray(newData);
+    }
+
+    setDraggedItem(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+    setDragOverIndex(null);
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 md:p-12">
+      <div className="max-w-6xl mx-auto">
+        {/* Header Section */}
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+                Task Management
+              </h1>
+              <p className="text-slate-400 text-lg">
+                Manage and track your tasks efficiently
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-4 shadow-lg">
+            <span className="text-white font-semibold text-lg">
+              Viewing <span className="text-blue-100">{currentData.length}</span> of{" "}
+              <span className="text-blue-100">{NUM_OF_RECORDS}</span> tasks
+            </span>
+            <span className="text-blue-100 text-sm">
+              Page {currentPage} of {Math.ceil(NUM_OF_RECORDS / LIMIT)}
+            </span>
+          </div>
+        </section>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+        {/* Table Section */}
+        <section className="table-section mb-8">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+            <div className="overflow-x-auto">
+              <table className="w-full" role="table" aria-label="Tasks table">
+                <thead>
+                  <tr className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                    <th scope="col" className="px-6 py-4 text-center font-semibold text-sm tracking-wider w-12" title="Drag to reorder rows">
+                      Drag
+                    </th>
+                    <th scope="col" className="px-6 py-4 text-left font-semibold text-sm tracking-wider">
+                      ID
+                    </th>
+                    <th scope="col" className="px-6 py-4 text-left font-semibold text-sm tracking-wider">
+                      User ID
+                    </th>
+                    <th scope="col" className="px-6 py-4 text-left font-semibold text-sm tracking-wider">
+                      Task Title
+                    </th>
+                    <th scope="col" className="px-6 py-4 text-center font-semibold text-sm tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                  {currentData.map((item: DataItem, index: number) => {
+                    const absoluteIndex = (currentPage - 1) * LIMIT + index;
+                    return (
+                      <tr
+                        key={item.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, item)}
+                        onDragOver={handleDragOver}
+                        onDragEnter={(e) => handleDragEnter(e, absoluteIndex)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, item)}
+                        onDragEnd={handleDragEnd}
+                        className={`transition-all duration-200 cursor-move ${
+                          draggedItem?.id === item.id
+                            ? "opacity-50 bg-blue-200 dark:bg-blue-900/40"
+                            : dragOverIndex === absoluteIndex
+                            ? "bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500"
+                            : index % 2 === 0
+                            ? "bg-slate-50 dark:bg-slate-800/50"
+                            : "bg-white dark:bg-slate-800"
+                        } hover:bg-blue-50 dark:hover:bg-slate-700/50`}
+                      >
+                        <td className="px-6 py-4">
+                          <span className="text-xl text-slate-400 dark:text-slate-500 cursor-grab active:cursor-grabbing" title="Drag to reorder">
+                            ☰
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            #{item.id}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-sm">
+                            {item.userId}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-slate-700 dark:text-slate-300 font-medium">
+                            {item.title}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span
+                            className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-200 ${
+                              item.completed
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                            }`}
+                          >
+                            <span className="w-2 h-2 rounded-full mr-2 bg-current"></span>
+                            {item.completed ? "Completed" : "Pending"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        {/* Pagination Section */}
+        <section className="pagination-section flex justify-center">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border border-slate-200 dark:border-slate-700 inline-block">
+            <Paginations
+              totalRecords={NUM_OF_RECORDS}
+              pageLimit={LIMIT}
+              pageNeighbours={2}
+              onPageChanged={onPageChanged}
+              currentPage={currentPage}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }
