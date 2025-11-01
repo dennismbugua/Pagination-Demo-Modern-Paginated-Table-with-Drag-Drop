@@ -80,11 +80,14 @@ const Paginations: React.FC<PaginationsProps> = ({
               <li key={index}>
                 <a
                   href="/"
-                  className="flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all duration-200 font-semibold"
+                  className="group relative flex items-center justify-center w-12 h-12 rounded-xl border-2 border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300 font-bold overflow-hidden bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm hover:scale-110 hover:shadow-xl hover:shadow-blue-500/20"
                   aria-label="Previous page"
                   onClick={(e) => onPageChanged(e, pageNeighbours * 2 - 1)}
                 >
-                  <span aria-hidden="true" className="text-lg">&laquo;</span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+                  <svg className="w-5 h-5 relative z-10 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                  </svg>
                 </a>
               </li>
             );
@@ -93,12 +96,15 @@ const Paginations: React.FC<PaginationsProps> = ({
             return (
               <li key={index}>
                 <a
-                  className="flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all duration-200 font-semibold"
+                  className="group relative flex items-center justify-center w-12 h-12 rounded-xl border-2 border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300 font-bold overflow-hidden bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm hover:scale-110 hover:shadow-xl hover:shadow-blue-500/20"
                   href="/"
                   aria-label="Next page"
                   onClick={(e) => onPageChanged(e, pageNeighbours * 2 + 3)}
                 >
-                  <span aria-hidden="true" className="text-lg">&raquo;</span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+                  <svg className="w-5 h-5 relative z-10 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                  </svg>
                 </a>
               </li>
             );
@@ -106,16 +112,25 @@ const Paginations: React.FC<PaginationsProps> = ({
           return (
             <li key={index}>
               <a
-                className={`flex items-center justify-center w-10 h-10 rounded-lg font-semibold transition-all duration-200 ${
+                className={`relative group flex items-center justify-center w-12 h-12 rounded-xl font-bold text-base transition-all duration-300 overflow-hidden ${
                   currentPage === page
-                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                    : "border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:border-blue-500 dark:hover:border-blue-400"
+                    ? "bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-white shadow-2xl shadow-blue-500/50 scale-110 border-2 border-transparent"
+                    : "border-2 border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300 hover:border-blue-500 dark:hover:border-blue-400 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm hover:scale-105 hover:shadow-lg hover:shadow-blue-500/10"
                 }`}
                 href="/"
                 onClick={(e) => onPageChanged(e, typeof page === "number" ? page : 1)}
                 aria-current={currentPage === page ? "page" : undefined}
               >
-                {page}
+                {currentPage === page && (
+                  <>
+                    <span className="absolute inset-0 bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 animate-pulse opacity-50"></span>
+                    <span className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur-md opacity-75"></span>
+                  </>
+                )}
+                {currentPage !== page && (
+                  <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+                )}
+                <span className="relative z-10 group-hover:scale-110 transition-transform">{page}</span>
               </a>
             </li>
           );
